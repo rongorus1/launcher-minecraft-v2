@@ -4,6 +4,10 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 08 · Forge 47.4.0
+`cambio/08-forge-4740`
+`FORGE_VERSION` pasa a 47.4.0 (un mod del modpack lo requiere). `empaquetar_juego.py` lee la versión dinámicamente de la config para el marcador del zip preinstalado. Recompilado, actualizado el asset de la Release v1.0.0 y el paquete de reparto.
+
 ### 07 · Fix extracción RAR en el ejecutable (cffi)
 `cambio/07-fix-cffi-rar`
 El exe compilado fallaba al abrir el RAR (`No module named '_cffi_backend'`): PyInstaller no detectaba el import perezoso `from unrar.cffi import rarfile`. Se añadieron los hidden imports `cffi`, `_cffi_backend` y `unrar.cffi.rarfile` a `build.bat`.
