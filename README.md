@@ -1,6 +1,6 @@
 # RongonLang Launcher (v2)
 
-Lanzador personalizado para Minecraft **1.20.1 + Forge 47.3.0** con conexión automática al servidor `TU-SERVIDOR`, instalación de modpacks RAR/ZIP sin programas externos, juego preinstalado y auto-actualización desde GitHub Releases.
+Lanzador personalizado para Minecraft **1.20.1 + Forge 47.3.0** con conexión automática al servidor, instalación de modpacks RAR/ZIP sin programas externos, juego preinstalado y auto-actualización desde GitHub Releases.
 
 ## Novedades de la v2
 
