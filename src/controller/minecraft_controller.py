@@ -36,7 +36,7 @@ class MinecraftController:
                 pass
 
     def minecraft_set_status(self, text: str):
-        self.logging.info(text)
+        self.logging.info(f"[Fase] {text}")
 
 
     def minecraft_set_progress(self, value: int):
@@ -81,16 +81,16 @@ class MinecraftController:
         intentos = 3
         for intento in range(1, intentos + 1):
             try:
-                self.logging.info(f"Fase '{nombre_fase}': intento {intento}/{intentos}.")
+                self.logging.info(f"[Fase] {nombre_fase}: intento {intento}/{intentos}.")
                 funcion(*args, **kwargs)
-                self.logging.info(f"Fase '{nombre_fase}' completada.")
+                self.logging.info(f"[Fase] {nombre_fase} completada.")
                 return
             except Exception as e:
-                self.logging.error(f"Fase '{nombre_fase}': error en el intento {intento}/{intentos}: {e}")
+                self.logging.error(f"[Fase] {nombre_fase}: error en el intento {intento}/{intentos}: {e}")
                 if intento == intentos:
                     raise
                 self.logging.info(
-                    f"Fase '{nombre_fase}': se reintentara en 2 segundos (reanuda desde lo ya descargado).")
+                    f"[Fase] {nombre_fase}: se reintentara en 2 segundos (reanuda desde lo ya descargado).")
                 time.sleep(2)
 
 
@@ -142,7 +142,7 @@ class MinecraftController:
                     self.logging.info("Minecraft/Forge no instalados o incompletos. Instalando...")
                     bundle = buscar_juego_preinstalado()
                     if bundle:
-                        self.logging.info(f"Juego preinstalado encontrado: {bundle}. Copiando...")
+                        self.logging.info(f"[Fase] Copiando juego preinstalado: {bundle}")
                         self.root_window.after(0, lambda: messagebox.showinfo("Info", "Copiando juego preinstalado... no hace falta descargar."))
                         _top, err = extraer_juego_preinstalado(
                             bundle, MINECRAFT_DIRECTORY,
@@ -156,6 +156,7 @@ class MinecraftController:
 
                 # Reparar/verificar Minecraft SIEMPRE antes de lanzar: descarga solo
                 # lo que falta o esta corrupto (reanuda una instalacion interrumpida).
+                self.logging.info("[Fase] Minecraft: verificando/descargando librerias, assets y jar")
                 self._instalar_con_reintentos(
                     "Minecraft",
                     minecraft_launcher_lib.install.install_minecraft_version,
@@ -163,6 +164,7 @@ class MinecraftController:
                 )
 
                 if not os.path.exists(forge_json):
+                    self.logging.info("[Fase] Forge: instalando procesadores y verificando")
                     self._instalar_con_reintentos(
                         "Forge",
                         minecraft_launcher_lib.forge.install_forge_version,
@@ -181,7 +183,7 @@ class MinecraftController:
                     forge_profile, MINECRAFT_DIRECTORY, options
                 )
 
-                self.logging.info(f"Iniciando Minecraft: {command}")
+                self.logging.info(f"[Fase] Lanzando Minecraft: {command}")
 
                 if self.root_window is not None:
                     self.root_window.after(0, self.root_window.destroy)

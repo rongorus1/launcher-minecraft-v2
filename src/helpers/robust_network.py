@@ -1,4 +1,5 @@
 import logging
+import os
 
 import requests
 import minecraft_launcher_lib._helper
@@ -36,17 +37,26 @@ def _aplicar_reintentos_descarga():
     """
     def _wrap(module):
         original = module.download_file
+        logger = logging.getLogger()
 
         def retry_download(url, path, callback={}, sha1=None, lzma_compressed=False,
                            session=None, minecraft_directory=None, overwrite=False):
             last_error = None
             for intento in range(1, DESCARGAS_REINTENTOS + 1):
                 try:
-                    return original(url, path, callback, sha1, lzma_compressed,
-                                    session, minecraft_directory, overwrite)
+                    resultado = original(url, path, callback, sha1, lzma_compressed,
+                                         session, minecraft_directory, overwrite)
+                    if resultado is True:
+                        try:
+                            tamano_mb = os.path.getsize(path) / (1024 * 1024)
+                            logger.info(
+                                f"Descargado {os.path.basename(path)}: {tamano_mb:.1f} MB")
+                        except OSError:
+                            pass
+                    return resultado
                 except Exception as e:
                     last_error = e
-                    logging.getLogger().warning(
+                    logger.warning(
                         f"Descarga fallida ({intento}/{DESCARGAS_REINTENTOS}): {e}")
             raise last_error
 
