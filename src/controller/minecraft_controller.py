@@ -11,7 +11,7 @@ import minecraft_launcher_lib
 
 from components.progress_bar_generic import ProgressBarGeneric
 from config import MINECRAFT_VERSION, FORGE_VERSION, MINECRAFT_DIRECTORY, SERVER_IP, SERVER_PORT, LAUNCHER_NAME
-from helpers.java_tools import detectar_java
+from helpers.java_tools import java_ya_instalada, descargar_java_17
 from helpers.preinstalled import buscar_juego_preinstalado, extraer_juego_preinstalado
 from helpers.ram_tools import validate_ram
 from helpers.robust_network import obtener_velocidad_ultima_mbps
@@ -60,7 +60,7 @@ class MinecraftController:
     def minecraft_set_status(self, text: str):
         estado = _traducir_estado(text)
         self.estado_actual = estado
-        self.logging.info(estado)
+        self.logging.info(f"[Fase] {estado}")
         self._actualizar_estado_ui()
 
     def _actualizar_estado_ui(self):
@@ -80,7 +80,6 @@ class MinecraftController:
         if self.progress_bar:
             self._ui(self._aplicar_progreso, value)
 
-
     def _aplicar_progreso(self, value: int):
         if self.progress_bar is None:
             return
@@ -91,11 +90,9 @@ class MinecraftController:
         else:
             self.progress_bar.set(0.0)
 
-
     def minecraft_set_max(self, value: int):
         self.max_actual = value
         self.estado_progreso = 0
-        self.progress_bar_value_total = value
 
     def _progreso_preinstalado(self, ratio: float):
         self._ui(self._aplicar_ratio, ratio)
@@ -112,6 +109,31 @@ class MinecraftController:
         self.progress_bar.set(ratio)
 
 
+    def _descargar_java_hilo(self, resultado: dict):
+        """Descarga Java 17 en segundo plano (en paralelo con las librerias)."""
+        try:
+            from helpers.java_tools import ruta_java_launcher
+            ok = descargar_java_17(
+                progress_callback=self._progreso_java,
+                status_callback=self._estado_java,
+                silencioso=True)
+            if ok and ruta_java_launcher():
+                resultado['path'] = ruta_java_launcher()
+                self.logging.info(f"[Fase] Java 17 instalado en paralelo: {ruta_java_launcher()}")
+            else:
+                resultado['error'] = "No se pudo instalar Java 17 automaticamente. Descargalo desde https://adoptium.net e intentalo de nuevo."
+        except Exception as e:
+            self.logging.error(f"Error instalando Java en paralelo: {e}")
+            resultado['error'] = f"No se pudo instalar Java 17: {e}"
+
+    def _progreso_java(self, ratio: float):
+        self._ui(self._aplicar_ratio, ratio)
+
+    def _estado_java(self, texto: str):
+        if self.progress_bar is not None:
+            self._ui(self.progress_bar.set_status_thread_safe, texto)
+
+
     def _instalar_con_reintentos(self, nombre_fase: str, funcion, *args, **kwargs):
         """Ejecuta una fase de instalacion con reintentos.
 
@@ -123,16 +145,16 @@ class MinecraftController:
         intentos = 3
         for intento in range(1, intentos + 1):
             try:
-                self.logging.info(f"Fase '{nombre_fase}': intento {intento}/{intentos}.")
+                self.logging.info(f"[Fase] {nombre_fase}: intento {intento}/{intentos}.")
                 funcion(*args, **kwargs)
-                self.logging.info(f"Fase '{nombre_fase}' completada.")
+                self.logging.info(f"[Fase] {nombre_fase} completada.")
                 return
             except Exception as e:
-                self.logging.error(f"Fase '{nombre_fase}': error en el intento {intento}/{intentos}: {e}")
+                self.logging.error(f"[Fase] {nombre_fase}: error en el intento {intento}/{intentos}: {e}")
                 if intento == intentos:
                     raise
                 self.logging.info(
-                    f"Fase '{nombre_fase}': se reintentara en 2 segundos (reanuda desde lo ya descargado).")
+                    f"[Fase] {nombre_fase}: se reintentara en 2 segundos (reanuda desde lo ya descargado).")
                 time.sleep(2)
 
 
@@ -144,10 +166,20 @@ class MinecraftController:
                     self.root_window.after(0, lambda: messagebox.showerror("Error", "La RAM debe estar entre 4 y 16 GB"))
                     return
 
-                java_path = detectar_java()
-                if not java_path:
-                    self.root_window.after(0, lambda: messagebox.showerror("Error", "No se pudo encontrar Java en el PATH"))
-                    return
+                # --- Java: si no esta instalado se descarga EN PARALELO con las
+                #     librerias de Minecraft (antes era secuencial) ---
+                self.logging.info("[Fase] Buscando Java 17...")
+                java_path = java_ya_instalada()
+                hilo_java = None
+                resultado_java = {'path': java_path, 'error': None}
+                if java_path is None:
+                    self.logging.info("[Fase] Java no encontrado: se descargara en paralelo con las librerias.")
+                    resultado_java = {'path': None, 'error': None}
+                    hilo_java = threading.Thread(
+                        target=self._descargar_java_hilo, args=(resultado_java,), daemon=True)
+                    hilo_java.start()
+                else:
+                    self.logging.info(f"[Fase] Java detectado: {java_path}")
 
                 forge_profile = f"{MINECRAFT_VERSION}-forge-{FORGE_VERSION}"
 
@@ -163,7 +195,7 @@ class MinecraftController:
                     "token": "",
                     "uuid": "",
                     "gameDirectory": MINECRAFT_DIRECTORY,
-                    "java": java_path,
+                    "java": java_path if java_path else "",
                     "jvmArguments": [f"-Xmx{settings['ram']['max']}", f"-Xms{settings['ram']['min']}"],
                     "launcherName": LAUNCHER_NAME,
                     "customResolution": False,
@@ -184,7 +216,7 @@ class MinecraftController:
                     self.logging.info("Minecraft/Forge no instalados o incompletos. Instalando...")
                     bundle = buscar_juego_preinstalado()
                     if bundle:
-                        self.logging.info(f"Juego preinstalado encontrado: {bundle}. Copiando...")
+                        self.logging.info(f"[Fase] Copiando juego preinstalado: {bundle}")
                         self.root_window.after(0, lambda: messagebox.showinfo("Info", "Copiando juego preinstalado... no hace falta descargar."))
                         _top, err = extraer_juego_preinstalado(
                             bundle, MINECRAFT_DIRECTORY,
@@ -199,23 +231,40 @@ class MinecraftController:
 
                 # Reparar/verificar Minecraft SIEMPRE antes de lanzar: descarga solo
                 # lo que falta o esta corrupto (reanuda una instalacion interrumpida).
+                # Corre en paralelo con la descarga de Java.
+                self.logging.info("[Fase] Minecraft: verificando/descargando librerias, assets y jar")
                 self._instalar_con_reintentos(
                     "Minecraft",
                     minecraft_launcher_lib.install.install_minecraft_version,
                     MINECRAFT_VERSION, MINECRAFT_DIRECTORY, callback
                 )
 
+                # Forge necesita Java para sus procesadores: esperar a que termine.
+                if hilo_java is not None:
+                    hilo_java.join()
+                java_path = resultado_java['path']
+                if not java_path:
+                    self.logging.error(f"Error de Java: {resultado_java['error']}")
+                    self.root_window.after(0, lambda: messagebox.showerror(
+                        "Error de Java",
+                        resultado_java['error'] or "No se pudo instalar Java 17. Descárguelo desde https://adoptium.net e intente de nuevo."))
+                    return
+
                 if not os.path.exists(forge_json):
+                    self.logging.info("[Fase] Forge: instalando procesadores y verificando")
                     self._instalar_con_reintentos(
                         "Forge",
                         minecraft_launcher_lib.forge.install_forge_version,
-                        f"{MINECRAFT_VERSION}-{FORGE_VERSION}", MINECRAFT_DIRECTORY, callback
+                        f"{MINECRAFT_VERSION}-{FORGE_VERSION}", MINECRAFT_DIRECTORY, callback,
+                        java=java_path
                     )
 
                 if not os.path.exists(forge_json):
                     raise RuntimeError("No se pudo instalar Forge. Revisa la conexión a internet y vuelve a intentarlo.")
 
                 self.logging.info("Instalacion verificada y completa.")
+
+                options["java"] = java_path
 
                 if self.progress_bar:
                     self._ui(self.progress_bar.hidde_element)
@@ -224,7 +273,7 @@ class MinecraftController:
                     forge_profile, MINECRAFT_DIRECTORY, options
                 )
 
-                self.logging.info(f"Iniciando Minecraft: {command}")
+                self.logging.info(f"[Fase] Lanzando Minecraft: {command}")
 
                 if self.root_window is not None:
                     self.root_window.after(0, self.root_window.destroy)

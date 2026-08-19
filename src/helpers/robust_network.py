@@ -54,6 +54,7 @@ def _aplicar_reintentos_descarga():
     """
     def _wrap(module):
         original = module.download_file
+        logger = logging.getLogger()
 
         def retry_download(url, path, callback={}, sha1=None, lzma_compressed=False,
                            session=None, minecraft_directory=None, overwrite=False):
@@ -67,13 +68,16 @@ def _aplicar_reintentos_descarga():
                     if resultado is True and transcurrido >= 0.1:
                         try:
                             tamano_mb = os.path.getsize(path) / (1024 * 1024)
-                            _registrar_velocidad(tamano_mb / transcurrido)
+                            mbps = tamano_mb / transcurrido
+                            _registrar_velocidad(mbps)
+                            logger.info(
+                                f"Descargado {os.path.basename(path)}: {tamano_mb:.1f} MB ({mbps:.1f} MB/s)")
                         except OSError:
                             pass
                     return resultado
                 except Exception as e:
                     last_error = e
-                    logging.getLogger().warning(
+                    logger.warning(
                         f"Descarga fallida ({intento}/{DESCARGAS_REINTENTOS}): {e}")
             raise last_error
 

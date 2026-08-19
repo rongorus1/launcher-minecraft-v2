@@ -4,9 +4,17 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
-### 09 · UX de progreso, log de fases y Java en paralelo
-`cambio/09-ux-progreso-log-java-paralelo`
-Puntos [3], [5] y [6] de IDEAS.txt. Barra con etiqueta de estado (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo. Log de fases con `[Fase]` y cada descarga registrada con nombre y tamaño. Java 17 se descarga en paralelo con las librerías (antes secuencial) y se pasa a la instalación de Forge.
+### 09 · UX de progreso
+`cambio/09-ux-progreso`
+Barra con etiqueta de estado bajo ella (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo.
+
+### 10 · Log de fases
+`cambio/10-log-fases`
+Marcas `[Fase]` en `launcher.log` (Java / vanilla / librerías / Forge / assets / lanzamiento) y cada descarga registrada con nombre y tamaño, para diagnosticar dónde se quedó una instalación.
+
+### 11 · Java en paralelo
+`cambio/11-java-paralelo`
+Si falta Java 17 se descarga en paralelo con las librerías de Minecraft (antes secuencial); se espera antes de Forge y se le pasa a su instalación.
 
 ### 08 · Forge 47.4.0
 `cambio/08-forge-4740`
