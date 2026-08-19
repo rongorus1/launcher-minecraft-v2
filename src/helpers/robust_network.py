@@ -1,4 +1,7 @@
 import logging
+import os
+import threading
+import time
 
 import requests
 import minecraft_launcher_lib._helper
@@ -6,6 +9,21 @@ import minecraft_launcher_lib._helper
 _CONNECT_TIMEOUT = 15
 _READ_TIMEOUT = 120
 DESCARGAS_REINTENTOS = 3
+
+_velocidad_lock = threading.Lock()
+_velocidad_ultima_mbps = 0.0
+
+
+def obtener_velocidad_ultima_mbps() -> float:
+    """Velocidad (MB/s) de la ultima descarga completada, para mostrarla en la UI."""
+    with _velocidad_lock:
+        return _velocidad_ultima_mbps
+
+
+def _registrar_velocidad(mbps: float):
+    global _velocidad_ultima_mbps
+    with _velocidad_lock:
+        _velocidad_ultima_mbps = mbps
 
 
 def _aplicar_timeout_global():
@@ -36,17 +54,30 @@ def _aplicar_reintentos_descarga():
     """
     def _wrap(module):
         original = module.download_file
+        logger = logging.getLogger()
 
         def retry_download(url, path, callback={}, sha1=None, lzma_compressed=False,
                            session=None, minecraft_directory=None, overwrite=False):
             last_error = None
             for intento in range(1, DESCARGAS_REINTENTOS + 1):
+                inicio = time.monotonic()
                 try:
-                    return original(url, path, callback, sha1, lzma_compressed,
-                                    session, minecraft_directory, overwrite)
+                    resultado = original(url, path, callback, sha1, lzma_compressed,
+                                         session, minecraft_directory, overwrite)
+                    transcurrido = time.monotonic() - inicio
+                    if resultado is True and transcurrido >= 0.1:
+                        try:
+                            tamano_mb = os.path.getsize(path) / (1024 * 1024)
+                            mbps = tamano_mb / transcurrido
+                            _registrar_velocidad(mbps)
+                            logger.info(
+                                f"Descargado {os.path.basename(path)}: {tamano_mb:.1f} MB ({mbps:.1f} MB/s)")
+                        except OSError:
+                            pass
+                    return resultado
                 except Exception as e:
                     last_error = e
-                    logging.getLogger().warning(
+                    logger.warning(
                         f"Descarga fallida ({intento}/{DESCARGAS_REINTENTOS}): {e}")
             raise last_error
 
