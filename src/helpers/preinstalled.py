@@ -54,7 +54,8 @@ def _rel_segura(member):
 
 
 def extraer_juego_preinstalado(zip_path: str, minecraft_dir: str,
-                               progress_callback: callable = None):
+                               progress_callback: callable = None,
+                               status_callback: callable = None):
     """Copia el juego preinstalado del zip al .minecraft.
 
     Solo extrae versions/, libraries/, assets/ y runtime/. Salta los archivos
@@ -92,6 +93,9 @@ def extraer_juego_preinstalado(zip_path: str, minecraft_dir: str,
         rel = _rel_segura(m.filename)
         if not rel or rel.split(os.sep)[0] not in PREDIRECTOS:
             continue
+
+        if status_callback is not None:
+            status_callback(rel)
 
         destino = os.path.join(minecraft_dir, rel)
 

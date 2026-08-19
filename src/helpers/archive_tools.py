@@ -69,7 +69,8 @@ def _safe_relative(rel):
 
 def extract_modpack(archive_path: str, minecraft_dir: str,
                     progress_bar: ProgressBarGeneric = None,
-                    progress_callback: callable = None):
+                    progress_callback: callable = None,
+                    status_callback: callable = None):
     """Extract a .rar/.zip modpack straight into the .minecraft directory.
 
     Returns (top_folders, error_message): top_folders is the set of folders
@@ -77,6 +78,8 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
 
     progress_callback (optional) receives a ratio in [0, 1] and is called from
     the calling thread; prefer it over progress_bar for background threads.
+    status_callback (optional) receives the current file/folder being
+    extracted, para mostrarlo en la UI.
     """
     config_logging()
     logger = logging.getLogger()
@@ -125,6 +128,8 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
     # Only replace the mods folder when the pack actually provides mods
     if flat or "mods" in top_folders:
         mods_dir = os.path.join(minecraft_dir, "mods")
+        if status_callback is not None:
+            status_callback("Reemplazando carpeta mods/...")
         if os.path.isdir(mods_dir):
             shutil.rmtree(mods_dir)
         os.makedirs(mods_dir, exist_ok=True)
@@ -134,6 +139,9 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
         if not rel:
             continue
         target = os.path.join(minecraft_dir, rel)
+
+        if status_callback is not None:
+            status_callback(f"Extrayendo {rel} ({idx}/{total})")
 
         try:
             data = read_fn(name)

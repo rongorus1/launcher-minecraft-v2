@@ -14,9 +14,28 @@ from config import MINECRAFT_VERSION, FORGE_VERSION, MINECRAFT_DIRECTORY, SERVER
 from helpers.java_tools import detectar_java
 from helpers.preinstalled import buscar_juego_preinstalado, extraer_juego_preinstalado
 from helpers.ram_tools import validate_ram
+from helpers.robust_network import obtener_velocidad_ultima_mbps
 from services.logging_service import config_logging
 from services.profile_service import load_profiles
 from services.settings_service import load_settings
+
+# Traduccion de los estados que manda minecraft-launcher-lib (son en ingles)
+_TRADUCCIONES_ESTADO = {
+    "Download Libraries": "Descargando librerías",
+    "Download Assets": "Descargando assets",
+    "Install java runtime": "Instalando Java (runtime de Mojang)",
+    "Installation complete": "Instalación completa",
+}
+
+
+def _traducir_estado(texto: str) -> str:
+    if texto in _TRADUCCIONES_ESTADO:
+        return _TRADUCCIONES_ESTADO[texto]
+    if texto.startswith("Running processor "):
+        return "Aplicando Forge: " + texto[len("Running processor "):]
+    if texto.startswith("Download "):
+        return "Descargando " + texto[len("Download "):]
+    return texto
 
 
 class MinecraftController:
@@ -26,6 +45,9 @@ class MinecraftController:
         self.progress_bar = progress_bar
         self.root_window = root_window
         self.progress_bar_value_total: int = 0
+        self.estado_actual: str = ""
+        self.estado_progreso: int = 0
+        self.max_actual: int = 0
 
     def _ui(self, func, *args):
         """Ejecuta una operacion de UI en el hilo principal (seguro desde hilos)."""
@@ -36,10 +58,25 @@ class MinecraftController:
                 pass
 
     def minecraft_set_status(self, text: str):
-        self.logging.info(text)
+        estado = _traducir_estado(text)
+        self.estado_actual = estado
+        self.logging.info(estado)
+        self._actualizar_estado_ui()
 
+    def _actualizar_estado_ui(self):
+        if self.progress_bar is None:
+            return
+        texto = self.estado_actual
+        if self.max_actual > 0:
+            texto += f" · {self.estado_progreso}/{self.max_actual}"
+        velocidad = obtener_velocidad_ultima_mbps()
+        if velocidad > 0:
+            texto += f" · {velocidad:.1f} MB/s"
+        self._ui(self.progress_bar.set_status_thread_safe, texto)
 
     def minecraft_set_progress(self, value: int):
+        self.estado_progreso = value
+        self._actualizar_estado_ui()
         if self.progress_bar:
             self._ui(self._aplicar_progreso, value)
 
@@ -56,11 +93,16 @@ class MinecraftController:
 
 
     def minecraft_set_max(self, value: int):
-        self.logging.info(value)
+        self.max_actual = value
+        self.estado_progreso = 0
         self.progress_bar_value_total = value
 
     def _progreso_preinstalado(self, ratio: float):
         self._ui(self._aplicar_ratio, ratio)
+
+    def _estado_preinstalado(self, rel: str):
+        if self.progress_bar is not None:
+            self._ui(self.progress_bar.set_status_thread_safe, f"Copiando juego preinstalado: {rel}")
 
     def _aplicar_ratio(self, ratio: float):
         if self.progress_bar is None:
@@ -146,7 +188,8 @@ class MinecraftController:
                         self.root_window.after(0, lambda: messagebox.showinfo("Info", "Copiando juego preinstalado... no hace falta descargar."))
                         _top, err = extraer_juego_preinstalado(
                             bundle, MINECRAFT_DIRECTORY,
-                            progress_callback=self._progreso_preinstalado)
+                            progress_callback=self._progreso_preinstalado,
+                            status_callback=self._estado_preinstalado)
                         if err:
                             self.logging.error(f"Error al copiar el juego preinstalado: {err}")
                         else:
