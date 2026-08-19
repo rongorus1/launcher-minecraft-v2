@@ -1,0 +1,70 @@
+IDEAS DE MEJORA - RongonLang Launcher
+=======================================
+(Guardadas para implementar cuando se decida. NO borrar.)
+
+[1] EMPAQUETAR EL JUEGO PREINSTALADO  <-- IMPLEMENTADO (18/08/2026)
+    - build.bat paso [3/4]: empaquetar_juego.py crea dist\distribucion\juego_preinstalado.zip
+      (817 MB, 4129 archivos: versions/ + libraries/ + assets/ + runtime/) desde el
+      .minecraft instalado del host.
+    - src/helpers/preinstalled.py: buscar_juego_preinstalado() (busca junto al exe y en
+      la carpeta del paquete) y extraer_juego_preinstalado() (copia solo esas 4 carpetas,
+      con zip-slip protegido, salta archivos ya existentes del mismo tamano, progreso).
+    - minecraft_controller.py: si no hay instalacion y existe el zip, copia en lugar de
+      descargar (dialogo "Copiando juego preinstalado..."). La verificacion real la hace
+      install_minecraft_version al lanzar, asi que una copia cortada se auto-repara.
+    - Verificado: CRC del zip OK, extraccion real a carpeta fresca deja forge_json +
+      java.exe en su lugar, progreso 100%. Package = 817 MB zip + 482 MB rar.
+    - OJO: el zip debe quedar junto a la carpeta "RongonLang Launcher" (si se borra,
+      el launcher vuelve a descargar). Documentado en INSTRUCCIONES.txt.
+
+[2] MIRROR DE DESCARGA
+    - Configurar minecraft_launcher_lib.utils.mirror_server (ej. BMCLAPI
+      https://bmclapi2.bangbang93.com) si los CDN de Mojang van lentos.
+    - Hay que probar si rinde desde la region del host (Chile/LatAm).
+
+[3] UX DE PROGRESO
+    - Mostrar debajo de la barra: "Descargando librerias X/87", "X MB/s" y
+      el archivo actual, para que se vea que avanza y no parezca clavado.
+    - Es UX, no acelera, pero evita que el usuario piense que se colgo.
+
+[4] DESCARGA ROBUSTA (reanudar/verificar/reintentar)  <-- clave para el bug del 66%
+    - Antes de saltar un archivo existente, verificar tamano (no dejar
+      archivos truncados).
+    - Timeouts en cada descarga (si no hay datos en N segundos, abortar y
+      reintentar) -> evita quedarse colgado toda la noche.
+    - Reintentos automaticos (2-3 intentos) antes de dar error.
+    - Deteccion de "sin progreso": si la barra no avanza en X minutos, mostrar
+      aviso y reiniciar la descarga automaticamente.
+
+[5] JAVA EN PARALELO
+    - Si hace falta descargar Java, hacerlo en paralelo con las librerias de
+      Minecraft (hoy es secuencial).
+
+[6] LOG DE FASES
+    - Escribir en el log en que fase esta (Java / vanilla / librerias / Forge /
+      assets) y con que archivo y tamano, para diagnosticar adonde se quedo.
+
+NOTA del incidente real: el launcher quedo en 66% toda la noche (PC encendido).
+La causa mas probable es una descarga sin timeout que se colgo (conexion que
+deja de responder y el hilo queda esperando para siempre). Verificar en el log
+adonde se detuvo y reforzar el punto [4].
+
+INCIDENTE CONFIRMADO (log 17/08 22:46 -> 22:51): el launcher se colgo
+descargando ASSETS (resources.download.minecraft.net) a las 22:51:56. La causa
+exacta: minecraft-launcher-lib llama requests.get SIN timeout, y copia el
+stream con shutil.copyfileobj; si la conexion deja de responder, el hilo queda
+bloqueado para siempre (ventana viva en 66%, cero descargas).
+
+FIX IMPLEMENTADO (18/08/2026) en src/helpers/robust_network.py:
+  - Timeout global (15s conectar / 120s leer) inyectado a TODAS las requests
+    del proceso (incluye las internas de minecraft-launcher-lib).
+  - Reintento por archivo (3 intentos) en download_file, porque
+    install.install_libraries se traga los errores por libreria (except: pass).
+  - src/controller/minecraft_controller.py: cada fase (Minecraft/Forge) se
+    ejecuta con _instalar_con_reintentos (3 intentos) y SIEMPRE se llama a
+    install_minecraft_version antes de lanzar (la libreria verifica/repara y
+    solo baja lo que falta o esta corrupto -> reanuda una instalacion cortada).
+
+Con el fix, una conexion muerta aborta en <=120s, se reintenta y se reanuda
+desde lo ya descargado; ya no puede quedar colgado toda la noche.
+Pendiente de evaluar: ver si un re-descarga completa termina OK tras el fix.

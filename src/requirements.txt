@@ -1,0 +1,7 @@
+minecraft-launcher-lib
+customtkinter
+pillow
+requests
+pyinstaller
+tk
+unrar2-cffi
