@@ -1,0 +1,57 @@
+name: Reporte de bug
+description: Reporta un error o comportamiento inesperado del launcher
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar. Antes de continuar, busca si el bug ya fue reportado en [issues](https://github.com/rongorus1/launcher-minecraft-v2/issues).
+  - type: input
+    id: version
+    attributes:
+      label: Versión del launcher
+      description: La que aparece en la ventana del launcher o en la Release usada.
+      placeholder: "1.0.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: version_mc
+    attributes:
+      label: ¿Juego preinstalado o instalación desde cero?
+      options:
+        - Juego preinstalado
+        - Instalación desde cero
+        - No lo sé
+    validations:
+      required: true
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Describe el problema
+      description: Qué esperabas que pasara y qué pasó realmente.
+      placeholder: "Al pulsar Play el launcher se cierra sin abrir Minecraft..."
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Secuencia exacta de acciones.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Adjunta o pega el contenido de `launcher.log` si existe (junto al .exe).
+      render: shell
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto adicional
+      description: Capturas de pantalla, RAM configurada, sistema operativo, etc.

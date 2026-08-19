@@ -4,9 +4,17 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 14 · Política de seguridad
+`cambio/14-security-policy`
+Ampliación de `SECURITY.md` (versiones soportadas, canales de reporte privado y proceso de respuesta) para que GitHub detecte la política de seguridad y el checklist de comunidad quede 100% en verde.
+
+### 13 · Estándares de comunidad
+`cambio/13-estandares-comunidad`
+Configuración del repo para cumplir los estándares de comunidad de GitHub: licencia MIT, README actualizado (Forge 47.4.0, tamaños reales, insignias, sección para jugadores y desarrolladores), topics, plantillas de issues (bug/función) y de PR, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, CI de compilación (GitHub Actions) y ajustes de protección del repo.
+
 ### 12 · Versión 1.0.1
 `cambio/12-version-101`
-`VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja). Incluye dos fixes: la **barra de progreso** (`minecraft_set_max` ahora guarda el total, antes quedaba en 0) y el **extractor de modpacks** (`extract_modpack` crea las carpetas vacías del RAR como carpetas reales y extrae `fancymenu_data/`, que trae las imágenes del menú de FancyMenu; antes escribía archivos de 0 bytes y FancyMenu crasheaba por `fancymenu_temp`).
+`VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja).
 
 ### 09 · UX de progreso
 `cambio/09-ux-progreso`

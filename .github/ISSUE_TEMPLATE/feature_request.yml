@@ -1,0 +1,29 @@
+name: Solicitud de función
+description: Sugiere una idea o mejora para el launcher
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tu idea. Antes de abrirla, comprueba que no exista ya en [issues](https://github.com/rongorus1/launcher-minecraft-v2/issues).
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema resuelve?
+      description: Describe el problema o necesidad que motiva esta función.
+      placeholder: "El jugador no tiene manera de ver cuánto le queda de descarga..."
+    validations:
+      required: true
+  - type: textarea
+    id: solucion
+    attributes:
+      label: ¿Qué solución propones?
+      description: Describe la función ideal, sin limitarte por la implementación.
+    validations:
+      required: true
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
+      description: Otras soluciones o workarounds que probaste.

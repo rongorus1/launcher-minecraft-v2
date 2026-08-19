@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Soporte en Discord
+    url: https://discord.gg/kZWQrwb64p
+    about: Dudas de uso, instalación o soporte rápido.
+  - name: Reportar una vulnerabilidad
+    url: https://github.com/rongorus1/launcher-minecraft-v2/security/policy
+    about: Reporta problemas de seguridad de forma privada, no como issue público.
