@@ -14,9 +14,28 @@ from config import MINECRAFT_VERSION, FORGE_VERSION, MINECRAFT_DIRECTORY, SERVER
 from helpers.java_tools import java_ya_instalada, descargar_java_17
 from helpers.preinstalled import buscar_juego_preinstalado, extraer_juego_preinstalado
 from helpers.ram_tools import validate_ram
+from helpers.robust_network import obtener_velocidad_ultima_mbps
 from services.logging_service import config_logging
 from services.profile_service import load_profiles
 from services.settings_service import load_settings
+
+# Traduccion de los estados que manda minecraft-launcher-lib (son en ingles)
+_TRADUCCIONES_ESTADO = {
+    "Download Libraries": "Descargando librerías",
+    "Download Assets": "Descargando assets",
+    "Install java runtime": "Instalando Java (runtime de Mojang)",
+    "Installation complete": "Instalación completa",
+}
+
+
+def _traducir_estado(texto: str) -> str:
+    if texto in _TRADUCCIONES_ESTADO:
+        return _TRADUCCIONES_ESTADO[texto]
+    if texto.startswith("Running processor "):
+        return "Aplicando Forge: " + texto[len("Running processor "):]
+    if texto.startswith("Download "):
+        return "Descargando " + texto[len("Download "):]
+    return texto
 
 
 class MinecraftController:
@@ -26,6 +45,9 @@ class MinecraftController:
         self.progress_bar = progress_bar
         self.root_window = root_window
         self.progress_bar_value_total: int = 0
+        self.estado_actual: str = ""
+        self.estado_progreso: int = 0
+        self.max_actual: int = 0
 
     def _ui(self, func, *args):
         """Ejecuta una operacion de UI en el hilo principal (seguro desde hilos)."""
@@ -36,13 +58,27 @@ class MinecraftController:
                 pass
 
     def minecraft_set_status(self, text: str):
-        self.logging.info(text)
+        estado = _traducir_estado(text)
+        self.estado_actual = estado
+        self.logging.info(f"[Fase] {estado}")
+        self._actualizar_estado_ui()
 
+    def _actualizar_estado_ui(self):
+        if self.progress_bar is None:
+            return
+        texto = self.estado_actual
+        if self.max_actual > 0:
+            texto += f" · {self.estado_progreso}/{self.max_actual}"
+        velocidad = obtener_velocidad_ultima_mbps()
+        if velocidad > 0:
+            texto += f" · {velocidad:.1f} MB/s"
+        self._ui(self.progress_bar.set_status_thread_safe, texto)
 
     def minecraft_set_progress(self, value: int):
+        self.estado_progreso = value
+        self._actualizar_estado_ui()
         if self.progress_bar:
             self._ui(self._aplicar_progreso, value)
-
 
     def _aplicar_progreso(self, value: int):
         if self.progress_bar is None:
@@ -54,13 +90,16 @@ class MinecraftController:
         else:
             self.progress_bar.set(0.0)
 
-
     def minecraft_set_max(self, value: int):
-        self.logging.info(value)
-        self.progress_bar_value_total = value
+        self.max_actual = value
+        self.estado_progreso = 0
 
     def _progreso_preinstalado(self, ratio: float):
         self._ui(self._aplicar_ratio, ratio)
+
+    def _estado_preinstalado(self, rel: str):
+        if self.progress_bar is not None:
+            self._ui(self.progress_bar.set_status_thread_safe, f"Copiando juego preinstalado: {rel}")
 
     def _aplicar_ratio(self, ratio: float):
         if self.progress_bar is None:
@@ -106,16 +145,16 @@ class MinecraftController:
         intentos = 3
         for intento in range(1, intentos + 1):
             try:
-                self.logging.info(f"Fase '{nombre_fase}': intento {intento}/{intentos}.")
+                self.logging.info(f"[Fase] {nombre_fase}: intento {intento}/{intentos}.")
                 funcion(*args, **kwargs)
-                self.logging.info(f"Fase '{nombre_fase}' completada.")
+                self.logging.info(f"[Fase] {nombre_fase} completada.")
                 return
             except Exception as e:
-                self.logging.error(f"Fase '{nombre_fase}': error en el intento {intento}/{intentos}: {e}")
+                self.logging.error(f"[Fase] {nombre_fase}: error en el intento {intento}/{intentos}: {e}")
                 if intento == intentos:
                     raise
                 self.logging.info(
-                    f"Fase '{nombre_fase}': se reintentara en 2 segundos (reanuda desde lo ya descargado).")
+                    f"[Fase] {nombre_fase}: se reintentara en 2 segundos (reanuda desde lo ya descargado).")
                 time.sleep(2)
 
 
@@ -177,11 +216,12 @@ class MinecraftController:
                     self.logging.info("Minecraft/Forge no instalados o incompletos. Instalando...")
                     bundle = buscar_juego_preinstalado()
                     if bundle:
-                        self.logging.info(f"Juego preinstalado encontrado: {bundle}. Copiando...")
+                        self.logging.info(f"[Fase] Copiando juego preinstalado: {bundle}")
                         self.root_window.after(0, lambda: messagebox.showinfo("Info", "Copiando juego preinstalado... no hace falta descargar."))
                         _top, err = extraer_juego_preinstalado(
                             bundle, MINECRAFT_DIRECTORY,
-                            progress_callback=self._progreso_preinstalado)
+                            progress_callback=self._progreso_preinstalado,
+                            status_callback=self._estado_preinstalado)
                         if err:
                             self.logging.error(f"Error al copiar el juego preinstalado: {err}")
                         else:
@@ -192,6 +232,7 @@ class MinecraftController:
                 # Reparar/verificar Minecraft SIEMPRE antes de lanzar: descarga solo
                 # lo que falta o esta corrupto (reanuda una instalacion interrumpida).
                 # Corre en paralelo con la descarga de Java.
+                self.logging.info("[Fase] Minecraft: verificando/descargando librerias, assets y jar")
                 self._instalar_con_reintentos(
                     "Minecraft",
                     minecraft_launcher_lib.install.install_minecraft_version,
@@ -210,6 +251,7 @@ class MinecraftController:
                     return
 
                 if not os.path.exists(forge_json):
+                    self.logging.info("[Fase] Forge: instalando procesadores y verificando")
                     self._instalar_con_reintentos(
                         "Forge",
                         minecraft_launcher_lib.forge.install_forge_version,
@@ -231,7 +273,7 @@ class MinecraftController:
                     forge_profile, MINECRAFT_DIRECTORY, options
                 )
 
-                self.logging.info(f"Iniciando Minecraft: {command}")
+                self.logging.info(f"[Fase] Lanzando Minecraft: {command}")
 
                 if self.root_window is not None:
                     self.root_window.after(0, self.root_window.destroy)
