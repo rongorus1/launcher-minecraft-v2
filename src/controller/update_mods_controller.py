@@ -19,7 +19,15 @@ def run_update_mods_controller(progress_bar: ProgressBarGeneric = None):
                 progress_bar.show_element_thread_safe()
                 progress_bar.set_thread_safe(ratio)
 
-        top_folders, error = extract_modpack(archive_path, MINECRAFT_DIRECTORY, progress_callback=reportar_progreso)
+        def reportar_estado(texto):
+            if progress_bar is not None:
+                progress_bar.show_element_thread_safe()
+                progress_bar.set_status_thread_safe(texto)
+
+        top_folders, error = extract_modpack(
+            archive_path, MINECRAFT_DIRECTORY,
+            progress_callback=reportar_progreso,
+            status_callback=reportar_estado)
 
         master = progress_bar.master if progress_bar is not None else None
 

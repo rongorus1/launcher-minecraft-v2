@@ -21,12 +21,22 @@ class ProgressBarGeneric(CTkProgressBar):
             text_color=("#ffffff", "#ffffff")
         )
 
+        self.status_label = CTkLabel(
+            master,
+            text="",
+            font=("Arial", 13),
+            text_color=("#d0d0d0", "#d0d0d0")
+        )
+
         self.set(0)
 
     def set(self, value):
         super().set(value)
         percent = int(max(0.0, min(1.0, float(value))) * 100)
         self.percent_label.configure(text=f"{percent} %")
+
+    def set_status(self, text):
+        self.status_label.configure(text=text)
 
     def update_width(self, width):
         self.configure(width=width)
@@ -40,6 +50,9 @@ class ProgressBarGeneric(CTkProgressBar):
 
     def set_thread_safe(self, value):
         self._run_in_main(lambda: self.set(value))
+
+    def set_status_thread_safe(self, text):
+        self._run_in_main(lambda: self.set_status(text))
 
     def show_element_thread_safe(self):
         self._run_in_main(self.show_element)
@@ -58,9 +71,15 @@ class ProgressBarGeneric(CTkProgressBar):
             rely=0.06,
             anchor="center"
         )
+        self.status_label.place(
+            relx=0.5,
+            rely=0.12,
+            anchor="center"
+        )
         self.is_hidden = False
 
     def hidde_element(self):
         self.place_forget()
         self.percent_label.place_forget()
+        self.status_label.place_forget()
         self.is_hidden = True

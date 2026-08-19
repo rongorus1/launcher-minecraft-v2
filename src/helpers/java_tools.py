@@ -6,6 +6,7 @@ import subprocess
 import tarfile
 import zipfile
 from tkinter import messagebox
+import logging
 
 import requests
 
@@ -14,6 +15,26 @@ from config import LAUNCHER_DIR
 
 def _ruta_java_launcher():
     return os.path.join(LAUNCHER_DIR, "Java", "java17", "bin", "java.exe" if platform.system() == "Windows" else "java")
+
+
+def ruta_java_launcher():
+    """Ruta donde el launcher instala su propio Java 17 (este o no instalado)."""
+    return _ruta_java_launcher()
+
+
+def java_ya_instalada():
+    """Devuelve la ruta de Java 17+ si ya existe (PATH o la del launcher), o None.
+
+    No descarga nada: es la comprobacion rapida para saber si hace falta
+    descargar Java en paralelo con las librerias.
+    """
+    ruta = _java_en_path()
+    if ruta:
+        return ruta
+    ruta_fija = _ruta_java_launcher()
+    if os.path.exists(ruta_fija):
+        return ruta_fija
+    return None
 
 
 def _version_java(java_path):
@@ -38,11 +59,30 @@ def _java_en_path():
     return None
 
 
-def descargar_java_17():
+def descargar_java_17(progress_callback: callable = None,
+                      status_callback: callable = None,
+                      silencioso: bool = False):
     """Descargar e instalar Temurin 17 (JRE) en la carpeta del launcher.
 
     No requiere herramientas externas: zip para Windows, tar.gz para macOS/Linux.
+    Con `silencioso=True` no muestra messageboxes (para descargar en paralelo,
+    donde el progreso se muestra en la barra del launcher). Con
+    `progress_callback`/`status_callback` informa avance (0..1) y texto.
     """
+    def _reportar(texto=None, ratio=None):
+        if status_callback is not None and texto is not None:
+            status_callback(texto)
+        if progress_callback is not None and ratio is not None:
+            progress_callback(ratio)
+
+    def _informar_ok(texto):
+        if not silencioso:
+            messagebox.showinfo("Éxito", texto)
+
+    def _informar_error(texto):
+        if not silencioso:
+            messagebox.showerror("Error", texto)
+
     try:
         java_dir = os.path.join(LAUNCHER_DIR, "Java")
         java17_dir = os.path.join(java_dir, "java17")
@@ -60,17 +100,39 @@ def descargar_java_17():
         }
         java_url = urls.get(sistema_actual, urls["Windows"])
 
-        messagebox.showinfo("Instalación de Java", "Descargando Java 17. Esto puede tardar unos minutos...")
+        if not silencioso:
+            messagebox.showinfo("Instalación de Java", "Descargando Java 17. Esto puede tardar unos minutos...")
 
-        respuesta = requests.get(java_url, stream=True, allow_redirects=True, timeout=60)
-        respuesta.raise_for_status()
         ruta_descarga = os.path.join(java_dir, "java17_tmp")
-        with open(ruta_descarga, 'wb') as archivo:
-            for fragmento in respuesta.iter_content(chunk_size=8192):
-                archivo.write(fragmento)
+        temp_dir = os.path.join(java_dir, "java17_tmp_dir")
+
+        # 3 intentos por si la conexion se corta (timeout global aplicado)
+        for intento in range(1, 4):
+            try:
+                _reportar(texto=f"Descargando Java 17 (intento {intento}/3)...")
+                respuesta = requests.get(java_url, stream=True, allow_redirects=True, timeout=60)
+                respuesta.raise_for_status()
+                total = int(respuesta.headers.get("content-length") or 0)
+                descargados = 0
+                with open(ruta_descarga, 'wb') as archivo:
+                    for fragmento in respuesta.iter_content(chunk_size=8192):
+                        if not fragmento:
+                            continue
+                        archivo.write(fragmento)
+                        descargados += len(fragmento)
+                        if total > 0:
+                            _reportar(
+                                texto=f"Descargando Java 17 ({descargados // (1024 * 1024)}/{total // (1024 * 1024)} MB)",
+                                ratio=min(descargados / total, 1.0))
+                break
+            except Exception as e:
+                logging.getLogger().warning(f"Descarga de Java fallida ({intento}/3): {e}")
+                if intento == 3:
+                    _informar_error(f"No se pudo descargar Java: {e}")
+                    return False
 
         # Extraer a un directorio temporal para luego dejar solo java17/
-        temp_dir = os.path.join(java_dir, "java17_tmp_dir")
+        _reportar(texto="Descomprimiendo Java 17...", ratio=None)
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
         os.makedirs(temp_dir, exist_ok=True)
@@ -96,14 +158,14 @@ def descargar_java_17():
         shutil.rmtree(temp_dir, ignore_errors=True)
 
         if os.path.exists(_ruta_java_launcher()):
-            messagebox.showinfo("Éxito", "Java 17 se ha instalado correctamente")
+            _informar_ok("Java 17 se ha instalado correctamente")
             return True
 
-        messagebox.showerror("Error", "No se pudo instalar Java automáticamente")
+        _informar_error("No se pudo instalar Java automáticamente")
         return False
 
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo instalar Java: {e}")
+        _informar_error(f"No se pudo instalar Java: {e}")
         return False
 
 
