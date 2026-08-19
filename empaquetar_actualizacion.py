@@ -4,7 +4,7 @@ import sys
 import zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
-from version import VERSION  # noqa: E402
+from version import VERSION, GITHUB_REPO  # noqa: E402
 
 SRC = os.path.join("dist", "distribucion", "RongonLang Launcher")
 OUT_ZIP = os.path.join("dist", "distribucion", f"launcher_update_{VERSION}.zip")
@@ -38,7 +38,7 @@ def main():
     size = os.path.getsize(OUT_ZIP) / 1024 / 1024
     print(f"Paquete de actualizacion: {OUT_ZIP} ({count} archivos, {size:.1f} MB)")
     print("Para publicar:")
-    print(f"  1) Crea una Release 'v{VERSION}' en https://github.com/{'rongorus1/launcher-minecraft-v1'}/releases")
+    print(f"  1) Crea una Release 'v{VERSION}' en https://github.com/{GITHUB_REPO}/releases")
     print(f"  2) Sube como asset: {os.path.basename(OUT_ZIP)}")
     return 0
 
