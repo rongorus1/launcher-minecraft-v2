@@ -6,7 +6,7 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ### 12 · Versión 1.0.1
 `cambio/12-version-101`
-`VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja).
+`VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja). Incluye el fix de la barra de progreso: `minecraft_set_max` ahora guarda el total (`progress_bar_value_total`), antes quedaba en 0 y la barra no avanzaba aunque el texto sí.
 
 ### 09 · UX de progreso
 `cambio/09-ux-progreso`
