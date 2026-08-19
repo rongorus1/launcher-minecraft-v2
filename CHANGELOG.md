@@ -6,15 +6,15 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ### 09 · UX de progreso
 `cambio/09-ux-progreso`
-Punto [3] de IDEAS.txt. Barra con etiqueta de estado bajo ella (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo.
+Barra con etiqueta de estado bajo ella (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo.
 
 ### 10 · Log de fases
 `cambio/10-log-fases`
-Punto [6] de IDEAS.txt. Marcas `[Fase]` en `launcher.log` (Java / vanilla / librerías / Forge / assets / lanzamiento) y cada descarga registrada con nombre y tamaño, para diagnosticar dónde se quedó una instalación.
+Marcas `[Fase]` en `launcher.log` (Java / vanilla / librerías / Forge / assets / lanzamiento) y cada descarga registrada con nombre y tamaño, para diagnosticar dónde se quedó una instalación.
 
 ### 11 · Java en paralelo
 `cambio/11-java-paralelo`
-Punto [5] de IDEAS.txt. Si falta Java 17 se descarga en paralelo con las librerías de Minecraft (antes secuencial); se espera antes de Forge y se le pasa a su instalación.
+Si falta Java 17 se descarga en paralelo con las librerías de Minecraft (antes secuencial); se espera antes de Forge y se le pasa a su instalación.
 
 ### 08 · Forge 47.4.0
 `cambio/08-forge-4740`
