@@ -1,0 +1,51 @@
+=============================================
+   RONGONLANG LAUNCHER - GUIA DE INSTALACION
+=============================================
+
+1) REQUISITOS
+   - Windows 64 bits.
+   - Internet (solo para la primera vez, si no hay juego preinstalado).
+   - Al menos 8 GB de espacio libre en disco (el juego ocupa ~2 GB mas tu modpack).
+
+2) INSTALACION
+   - Descomprime la carpeta "Launcher" donde quieras (ej. Escritorio).
+   - Abre la carpeta "RongonLang Launcher" y ejecuta "RongonLang Launcher.exe".
+   - Windows puede mostrar el aviso "Windows protegio su PC":
+        1. Haz clic en "Mas informacion".
+        2. Luego en "Ejecutar de todos modos".
+      Es normal: el programa no esta firmado digitalmente.
+   - Si el antivirus lo bloquea, anade una exclusion para la carpeta del launcher.
+
+3) PRIMER INICIO (importante)
+   - Dentro de la carpeta "RongonLang Launcher" viene "juego_preinstalado.zip":
+     la primera vez el launcher SOLO LO COPIA a tu pc (1-2 minutos, sin
+     descargar) y ya puedes jugar.
+   - IMPORTANTE: no borres ni muevas "juego_preinstalado.zip" de la carpeta
+     hasta que el juego se haya copiado. Si no esta ese zip, el launcher
+     descarga Minecraft 1.20.1 y Forge (puede tardar varios minutos).
+   - Si no tienes Java 17 instalado, el launcher lo descarga solo.
+
+4) INSTALAR EL MODPACK (Rongoland.rar)
+   - Boton "Instalar Modpack" (izquierda del launcher).
+   - Selecciona el archivo "Rongoland.rar" que viene junto al launcher.
+   - Espera a que termine la barra de progreso.
+   - Cuando diga que termino, ya puedes jugar.
+
+5) CONFIGURAR NOMBRE
+   - Boton "Iniciar sesion" (esquina superior izquierda).
+   - Escribe tu nombre de jugador y guarda.
+
+6) JUGAR
+   - Boton "Play".
+   - Elige la RAM (4-16 GB; 8 GB recomendado si tienes 16 GB o mas).
+   - El launcher abre Minecraft y te conecta solo al servidor.
+
+7) PROBLEMAS COMUNES
+   - "No se pudo iniciar Minecraft": cierra y vuelve a abrir el launcher;
+     si persiste, revisa que tengas espacio libre y conexion a internet.
+   - Entra pero con problemas de skin: usa el comando /skin <nombre> dentro
+     del servidor.
+   - El modpack no se instala: asegurate de elegir el archivo Rongoland.rar
+     (y no otro archivo).
+
+=============================================

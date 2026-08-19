@@ -1,0 +1,18 @@
+# Artefactos de build / ejecutable
+dist/
+build/
+*.spec
+*.log
+*.pyc
+__pycache__/
+
+# Archivos grandes generados (no van al repo)
+Rongoland.rar
+*.zip
+version.json
+actualizar.bat
+_update/
+
+# IDE
+.idea/
+.vscode/
