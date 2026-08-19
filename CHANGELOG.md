@@ -4,6 +4,10 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 12 · Versión 1.0.1
+`cambio/12-version-101`
+`VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja).
+
 ### 09 · UX de progreso
 `cambio/09-ux-progreso`
 Barra con etiqueta de estado bajo ella (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo.
