@@ -4,6 +4,10 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 09 · UX de progreso, log de fases y Java en paralelo
+`cambio/09-ux-progreso-log-java-paralelo`
+Puntos [3], [5] y [6] de IDEAS.txt. Barra con etiqueta de estado (fase traducida a español, contador X/Y, archivo actual y MB/s). La extracción de mods muestra el archivo/carpeta que se está leyendo y la copia preinstalada muestra cada archivo. Log de fases con `[Fase]` y cada descarga registrada con nombre y tamaño. Java 17 se descarga en paralelo con las librerías (antes secuencial) y se pasa a la instalación de Forge.
+
 ### 08 · Forge 47.4.0
 `cambio/08-forge-4740`
 `FORGE_VERSION` pasa a 47.4.0 (un mod del modpack lo requiere). `empaquetar_juego.py` lee la versión dinámicamente de la config para el marcador del zip preinstalado. Recompilado, actualizado el asset de la Release v1.0.0 y el paquete de reparto.
