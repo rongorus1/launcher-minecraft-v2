@@ -4,6 +4,10 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 13 · Estándares de comunidad
+`cambio/13-estandares-comunidad`
+Configuración del repo para cumplir los estándares de comunidad de GitHub: licencia MIT, README actualizado (Forge 47.4.0, tamaños reales, insignias, sección para jugadores y desarrolladores), topics, plantillas de issues (bug/función) y de PR, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, CI de compilación (GitHub Actions) y ajustes de protección del repo.
+
 ### 12 · Versión 1.0.1
 `cambio/12-version-101`
 `VERSION` pasa a 1.0.1 y se publica la Release v1.0.1 con su asset de actualización: los launchers 1.0.0 ya instalados detectan la versión nueva y se auto-actualizan. Además, este exe trae Forge 47.4.0 embebido (el paquete anterior incluía un exe con 47.3.0 y por eso el juego arrancaba con la versión vieja).
