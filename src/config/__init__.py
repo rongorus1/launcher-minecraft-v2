@@ -13,6 +13,7 @@ MINECRAFT_VERSION = "1.20.1"
 FORGE_VERSION = "47.3.0"
 
 # Server connection (auto-join when pressing Play)
+# Reemplazar por la IP/dominio real del servidor al compilar
 SERVER_IP = "TU-SERVIDOR"
 SERVER_PORT = "11127"
 

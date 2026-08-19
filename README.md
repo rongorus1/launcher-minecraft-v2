@@ -21,7 +21,7 @@ python src/main.py
 
 - Inicia sesión y crea perfiles.
 - Configura la RAM (4-16 GB) en "Configuración RAM".
-- "Play" conecta automáticamente a `TU-SERVIDOR` con Forge.
+- "Play" conecta automáticamente al servidor con Forge.
 
 ## Configuración
 Edita `src/config/__init__.py` (versiones de Minecraft/Forge, servidor, nombre del launcher) y `src/version.py` (versión actual del launcher y repositorio de Releases).
