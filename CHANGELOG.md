@@ -2,6 +2,12 @@
 
 Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detallado en `cambios/`.
 
+## Correcciones posteriores a v1.0.0
+
+### 07 · Fix extracción RAR en el ejecutable (cffi)
+`cambio/07-fix-cffi-rar`
+El exe compilado fallaba al abrir el RAR (`No module named '_cffi_backend'`): PyInstaller no detectaba el import perezoso `from unrar.cffi import rarfile`. Se añadieron los hidden imports `cffi`, `_cffi_backend` y `unrar.cffi.rarfile` a `build.bat`.
+
 ## v1.0.0 — 2026-08-18
 
 ### 01 · Modpacks RAR/ZIP sin programas externos
