@@ -15,7 +15,7 @@ if exist "dist\distribucion\RongonLang Launcher" (
     rmdir /s /q "dist\distribucion\RongonLang Launcher"
 )
 
-python -m PyInstaller --noconfirm --onedir --noconsole --name "RongonLang Launcher" --distpath "dist\distribucion" --workpath "build" --icon Launcher.ico --paths src --add-data "src\assets;assets" --hidden-import PIL._tkinter_finder --hidden-import PIL.ImageTk src\main.py
+python -m PyInstaller --noconfirm --onedir --noconsole --name "RongonLang Launcher" --distpath "dist\distribucion" --workpath "build" --icon Launcher.ico --paths src --add-data "src\assets;assets" --hidden-import PIL._tkinter_finder --hidden-import PIL.ImageTk --hidden-import cffi --hidden-import _cffi_backend --hidden-import unrar.cffi.rarfile src\main.py
 if errorlevel 1 goto :error
 
 echo [3/5] Empaquetando juego preinstalado dentro de la carpeta del launcher...
