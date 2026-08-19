@@ -93,6 +93,8 @@ class MinecraftController:
     def minecraft_set_max(self, value: int):
         self.max_actual = value
         self.estado_progreso = 0
+        if value > 0:
+            self.progress_bar_value_total = value
 
     def _progreso_preinstalado(self, ratio: float):
         self._ui(self._aplicar_ratio, ratio)

@@ -11,6 +11,7 @@ MC_DIRS = {
     "mods", "config", "kubejs", "defaultconfigs", "scripts", "shaderpacks",
     "resourcepacks", "datapacks", "global_packs", "plugins", "saves", "local",
     "crash-reports", "logs", "serverconfigs", "patchouli_books",
+    "fancymenu_data",
 }
 
 
@@ -91,39 +92,70 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
         if is_rar(archive_path):
             from unrar.cffi import rarfile
             opener = rarfile.RarFile(archive_path)
-            members = opener.namelist()
+            infos = opener.infolist()
             read_fn = opener.read
+
+            def _es_directorio(info):
+                # En los modpacks RAR el flag de directorio puede venir mal
+                # puesto: un directorio real siempre pesa 0 bytes.
+                return bool(getattr(info, "is_dir", False)) and info.file_size == 0
         elif is_zip(archive_path):
             opener = zipfile.ZipFile(archive_path)
-            members = opener.namelist()
+            infos = opener.infolist()
             read_fn = opener.read
+
+            def _es_directorio(info):
+                return info.is_dir()
         else:
             return None, "El archivo debe ser .rar o .zip"
     except Exception as e:
         logger.error(f"No se pudo abrir el archivo: {e}")
         return None, f"No se pudo abrir el archivo: {e}"
 
-    files = [m for m in members if not m.endswith(("/", "\\"))]
-    if not files:
+    def _nombre(info):
+        return info.filename.replace("\\", "/")
+
+    archivos = [i for i in infos if not _es_directorio(i) and not _nombre(i).endswith(("/", "\\"))]
+    directorios = [i for i in infos if _es_directorio(i)]
+    if not archivos:
         return None, "El archivo no contiene archivos"
 
-    strip_prefix, flat = _detect_layout(files)
+    strip_prefix, flat = _detect_layout([_nombre(i) for i in archivos])
 
     targets = []
-    for name in files:
-        rel = name.replace("\\", "/")
+    for info in archivos:
+        rel = _nombre(info)
         if strip_prefix and rel.startswith(strip_prefix):
             rel = rel[len(strip_prefix):]
         rel = rel.lstrip("/")
         if flat:
             rel = os.path.join("mods", os.path.basename(rel))
-        targets.append((name, _safe_relative(rel)))
+        targets.append((info.filename, _safe_relative(rel)))
 
     top_folders = set()
     for _, rel in targets:
         top = rel.split(os.sep)[0] if os.sep in rel else rel
         if top:
             top_folders.add(top)
+
+    # Las carpetas vacias que declare el modpack se crean como carpetas reales
+    # (p.ej. las de fancymenu_data); antes se escribian como archivos de 0
+    # bytes y mods como FancyMenu fallaban al crearlas.
+    if not flat:
+        for info in directorios:
+            rel = _nombre(info)
+            if strip_prefix and rel.startswith(strip_prefix):
+                rel = rel[len(strip_prefix):]
+            rel = rel.lstrip("/")
+            safe = _safe_relative(rel)
+            if not safe:
+                continue
+            if status_callback is not None:
+                status_callback(f"Creando carpeta {rel}/...")
+            try:
+                os.makedirs(os.path.join(minecraft_dir, safe), exist_ok=True)
+            except OSError as e:
+                logger.warning(f"No se pudo crear la carpeta {rel}: {e}")
 
     # Only replace the mods folder when the pack actually provides mods
     if flat or "mods" in top_folders:
