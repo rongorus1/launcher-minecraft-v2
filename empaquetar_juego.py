@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import zipfile
 
@@ -6,11 +7,23 @@ MC_DIR = os.path.expanduser("~/Desktop/RongocraftLauncher/.minecraft")
 ZIP_OUT = os.path.join("dist", "distribucion", "RongonLang Launcher", "juego_preinstalado.zip")
 DIRS = ("versions", "libraries", "assets", "runtime")
 
+CONFIG = os.path.join("src", "config", "__init__.py")
+
+
+def _leer_version(nombre):
+    with open(CONFIG, encoding="utf-8") as f:
+        m = re.search(rf'{nombre} = "([^"]+)"', f.read())
+    return m.group(1) if m else None
+
 
 def main():
-    marker = os.path.join(MC_DIR, "versions", "1.20.1-forge-47.3.0", "1.20.1-forge-47.3.0.json")
+    mc = _leer_version("MINECRAFT_VERSION")
+    forge = _leer_version("FORGE_VERSION")
+    profile = f"{mc}-forge-{forge}"
+    marker = os.path.join(MC_DIR, "versions", profile, f"{profile}.json")
     if not os.path.isfile(marker):
         print(f"AVISO: el juego instalado no se encontro en {MC_DIR}; se omite el zip.")
+        print(f"  (esperado: versions\\{profile}\\{profile}.json)")
         return 0
 
     os.makedirs(os.path.dirname(ZIP_OUT), exist_ok=True)
