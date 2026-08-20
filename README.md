@@ -99,5 +99,6 @@ Lee [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir un issue o un PR. Reporta 
 
 ## Créditos
 
+- [GatoArtStudio](https://github.com/GatoArtStudio) — autor del **RongonLang Launcher v1**, en el que se basa este proyecto (v2).
 - [minecraft-launcher-lib](https://github.com/JakobDev/minecraft-launcher-lib)
 - [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
