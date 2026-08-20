@@ -26,10 +26,11 @@ Lanzador personalizado para Minecraft **1.20.1 + Forge 47.4.0** con conexión au
 
 ## Para jugadores
 
-1. Descarga el paquete `RongonLang Launcher.zip` desde la última [Release](https://github.com/rongorus1/launcher-minecraft-v2/releases) (incluye el juego preinstalado).
+1. Descarga **`RongonLang.Launcher.zip`** (el paquete completo, incluye el juego preinstalado) y **`Rongoland.rar`** (el modpack) desde la última [Release](https://github.com/rongorus1/launcher-minecraft-v2/releases). *En la Release el nombre del zip aparece con puntos (`RongonLang.Launcher.zip`) porque GitHub convierte los espacios.*
 2. Descomprímelo en cualquier carpeta y ejecuta `RongonLang Launcher.exe`.
-3. Inicia sesión, configura la RAM (4-16 GB) en **Configuración RAM** y pulsa **Play**.
-4. Si sale un aviso de actualización, acepta: el launcher se actualiza solo.
+3. Una vez, pulsa **Actualizar mods** y selecciona `Rongoland.rar` para instalar los mods.
+4. Inicia sesión, configura la RAM (4-16 GB) en **Configuración RAM** y pulsa **Play**.
+5. Si sale un aviso de actualización, acepta: el launcher se actualiza solo.
 
 ## Requisitos
 
@@ -75,7 +76,7 @@ Compila directamente en `dist/distribucion/` (el ÚNICO lugar con el ejecutable)
 - `Rongoland.rar` + `INSTRUCCIONES.txt`
 - `launcher_update_<version>.zip` + `version.json` → para subir a la Release de GitHub
 
-Para el archivo único de reparto: `python comprimir_paquete.py` (crea `RongonLang Launcher.zip`, ~1.36 GB, con el zip del juego sin comprimir dentro para extracción rápida).
+Para el archivo único de reparto: `python comprimir_paquete.py` (crea `RongonLang Launcher.zip`, ~884 MB, con el zip del juego sin comprimir dentro para extracción rápida y **sin** el modpack, que se entrega aparte).
 
 Scripts de empaquetado:
 

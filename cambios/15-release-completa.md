@@ -21,14 +21,15 @@ La **v1.0.2** es la primera release **completa** para jugadores.
    `Rongoland.rar` e `INSTRUCCIONES.txt` y genera `launcher_update_1.0.2.zip`.
 2. `python comprimir_paquete.py`: genera `RongonLang Launcher.zip` (sin el modpack).
 3. Release **v1.0.2** en GitHub con assets:
-   - `RongonLang Launcher.zip` (~850 MB) — el launcher completo para el jugador.
+   - `RongonLang.Launcher.zip` (~884 MB) — el launcher completo para el jugador
+     (GitHub convierte los espacios en puntos en el nombre del asset).
    - `Rongoland.rar` (~483 MB) — el modpack, por separado.
    - `launcher_update_1.0.2.zip` (~35 MB) — para que los launchers 1.0.0/1.0.1 ya
      instalados se auto-actualicen a 1.0.2.
 
 ## Cómo juega un amigo
 
-1. Descarga `RongonLang Launcher.zip` y `Rongoland.rar` de la Release.
+1. Descarga `RongonLang.Launcher.zip` y `Rongoland.rar` de la Release.
 2. Descomprime el zip y ejecuta `RongonLang Launcher.exe` (aviso de SmartScreen normal).
 3. Primera vez: el launcher copia `juego_preinstalado.zip` (~1-2 min) y ya está listo.
 4. Pulsa **Actualizar mods** y selecciona `Rongoland.rar` (se instalan los 119 mods).
