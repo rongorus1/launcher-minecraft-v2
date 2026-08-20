@@ -4,7 +4,9 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
-### 14 · Política de seguridad
+### 15 · Release completa v1.0.2
+`cambio/15-release-completa`
+La **v1.0.2** es la primera release completa para jugadores: incluye `RongonLang Launcher.zip` (launcher + juego preinstalado, ~850 MB) y `Rongoland.rar` (modpack, ~483 MB) como assets. Las releases **v1.0.0 y v1.0.1 fueron pruebas de auto-actualización** (solo traían `launcher_update_*.zip` con el .exe). Se corrige `comprimir_paquete.py` para que el paquete de reparto **no incluya el modpack** (se entrega aparte, como indicaba el diseño original) y `VERSION` pasa a 1.0.2.
 `cambio/14-security-policy`
 Ampliación de `SECURITY.md` (versiones soportadas, canales de reporte privado y proceso de respuesta) para que GitHub detecte la política de seguridad y el checklist de comunidad quede 100% en verde.
 

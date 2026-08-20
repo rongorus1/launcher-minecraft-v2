@@ -4,6 +4,9 @@ import zipfile
 SRC = os.path.join("dist", "distribucion", "RongonLang Launcher")
 OUT = os.path.join("dist", "distribucion", "RongonLang Launcher.zip")
 
+# Archivos que se entregan por separado (modpack) o que se regeneran al ejecutar
+EXCLUIDOS = {"Rongoland.rar", "launcher.log"}
+
 
 def main():
     if not os.path.isdir(SRC):
@@ -16,6 +19,8 @@ def main():
     with zipfile.ZipFile(OUT, "w") as z:
         for root, _, files in os.walk(SRC):
             for f in files:
+                if f in EXCLUIDOS:
+                    continue
                 full = os.path.join(root, f)
                 rel = os.path.relpath(full, os.path.dirname(SRC))
                 # El juego preinstalado ya esta comprimido: guardarlo sin re-comprimir
