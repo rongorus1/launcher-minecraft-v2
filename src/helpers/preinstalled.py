@@ -1,10 +1,10 @@
 import logging
 import os
 import shutil
-import sys
 import zipfile
 
 from services.logging_service import config_logging
+from helpers.system_tools import get_resource_path
 
 # Carpetas del juego preinstalado que se empaquetan y se copian
 PREDIRECTOS = ("versions", "libraries", "assets", "runtime")
@@ -20,7 +20,7 @@ def buscar_juego_preinstalado():
     """
     candidatos = []
     try:
-        exe_dir = os.path.dirname(sys.executable)
+        exe_dir = get_resource_path("")
         candidatos.append(exe_dir)
         candidatos.append(os.path.dirname(exe_dir))
     except Exception:

@@ -3,6 +3,11 @@ import re
 import sys
 import zipfile
 
+# Añadir src/ al path para importaciones durante el build
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
+
+from helpers.system_tools import get_resource_path
+
 MC_DIR = os.path.expanduser("~/Desktop/RongocraftLauncher/.minecraft")
 ZIP_OUT = os.path.join("dist", "distribucion", "RongonLang Launcher", "juego_preinstalado.zip")
 DIRS = ("versions", "libraries", "assets", "runtime")
@@ -26,6 +31,26 @@ def main():
         print(f"  (esperado: versions\\{profile}\\{profile}.json)")
         return 0
 
+    os.makedirs(os.path.dirname(ZIP_OUT), exist_ok=True)
+    if os.path.exists(ZIP_OUT):
+        os.remove(ZIP_OUT)
+
+    # Determinar directorio base: modo onefile usa _MEIPASS, modoonedir usa la carpeta
+    if getattr(sys, "_MEIPASS", None):
+        # Modo PyInstaller onefile: los archivos estan en _MEIPASS
+        base_dir = get_resource_path("")
+        zip_inside = os.path.join(base_dir, "juego_preinstalado.zip")
+        if os.path.isfile(zip_inside):
+            import shutil
+            shutil.copy2(zip_inside, ZIP_OUT)
+            print(f"Zip creado copiando desde el exe empaquetado: {ZIP_OUT}")
+            return 0
+        else:
+            print("AVISO: No se encontró juego_preinstalado.zip dentro del exe (puede que aún no esté integrado).")
+            return 0
+
+    # Modo desarrollo o carpetaonedir: buscar el zip generado por empaquetado anterior
+    # o crear uno nuevo desde el directorio del juego instalado
     os.makedirs(os.path.dirname(ZIP_OUT), exist_ok=True)
     if os.path.exists(ZIP_OUT):
         os.remove(ZIP_OUT)

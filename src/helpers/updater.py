@@ -3,12 +3,12 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import zipfile
 
 import requests
 
 from services.logging_service import config_logging
+from helpers.system_tools import get_resource_path
 
 
 def _es_version_superior(nueva: str, actual: str) -> bool:
@@ -88,7 +88,7 @@ def aplicar_actualizacion(zip_path: str) -> str:
     """Prepara el swap y devuelve la ruta del .bat que aplicara el cambio al cerrar."""
     config_logging()
     logger = logging.getLogger()
-    base = os.path.dirname(sys.executable)
+    base = get_resource_path("")
 
     update_dir = os.path.join(base, "_update")
     if os.path.isdir(update_dir):
@@ -144,5 +144,6 @@ def aplicar_actualizacion(zip_path: str) -> str:
 
 
 def lanzar_actualizacion(bat: str):
-    base = os.path.dirname(sys.executable)
+    base = get_resource_path("")
+
     subprocess.Popen(["cmd", "/c", bat], cwd=base, creationflags=subprocess.CREATE_NO_WINDOW)
