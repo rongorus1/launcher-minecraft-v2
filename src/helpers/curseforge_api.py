@@ -46,13 +46,13 @@ class CurseForgeAPI:
             allowed_methods=["HEAD", "GET", "OPTIONS"]
         )
         adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("https://", requests.adapters.HTTPAdapter(max_retries=3))
+        self.session.mount("https://", adapter)
     
     def _request(self, method: str, endpoint: str, **kwargs) -> Optional[requests.Response]:
         """Realiza petición con manejo de errores y rate limiting."""
         url = f"{self.BASE_URL}{endpoint}"
         
-        for attempt in range(1, 4):
+        for attempt in range(1, _MAX_RETRIES + 1):
             try:
                 resp = self.session.request(
                     method,
@@ -60,27 +60,39 @@ class CurseForgeAPI:
                     timeout=(15, 60),
                     **kwargs
                 )
-                
+
                 # Rate limiting
                 if resp.status_code == 429:
                     retry_after = int(resp.headers.get("Retry-After", 60))
                     logger.warning(f"Rate limited. Esperando {retry_after}s...")
                     time.sleep(retry_after)
                     continue
-                
+
                 resp.raise_for_status()
                 return resp
-                
+
             except requests.exceptions.Timeout:
-                logger.warning(f"Timeout en intento {attempt + 1}/3")
+                logger.warning(f"Timeout en intento {attempt}/{_MAX_RETRIES}")
             except requests.exceptions.RequestException as e:
-                logger.warning(f"Error de red (intento {attempt + 1}/3): {e}")
-            
-            if attempt < 2:
-                time.sleep(2 ** attempt)  # Backoff exponencial
-        
-        logger.error(f"Falló después de 3 intentos: {url}")
+                logger.warning(f"Error de red (intento {attempt}/{_MAX_RETRIES}): {e}")
+
+            if attempt < _MAX_RETRIES:
+                time.sleep(_RETRY_BACKOFF ** attempt)  # Backoff exponencial
+
+        logger.error(f"Falló después de {_MAX_RETRIES} intentos: {url}")
         return None
+
+    def validate_key(self) -> bool:
+        """Verifica la key contra la API (GET /v1/games). False = inválida/revocada."""
+        try:
+            resp = self.session.get(
+                f"{self.BASE_URL}/games",
+                timeout=(10, 20),
+            )
+            return resp.status_code == 200
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"No se pudo validar la API key: {e}")
+            return False
     
     def get_file_download_url(self, project_id: int, file_id: int) -> Optional[str]:
         """Obtiene la URL de descarga directa (sigue redirect 302)."""

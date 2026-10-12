@@ -10,7 +10,7 @@ import threading
 import minecraft_launcher_lib
 
 from components.progress_bar_generic import ProgressBarGeneric
-from config import MINECRAFT_VERSION, FORGE_VERSION, MINECRAFT_DIRECTORY, SERVER_IP, SERVER_PORT, LAUNCHER_NAME
+from config import MINECRAFT_VERSION, FORGE_VERSION, MINECRAFT_DIRECTORY, LAUNCHER_NAME
 from helpers.java_tools import java_ya_instalada, descargar_java_17
 from helpers.preinstalled import buscar_juego_preinstalado, extraer_juego_preinstalado
 from helpers.ram_tools import validate_ram
@@ -206,13 +206,6 @@ class MinecraftController:
                     "customResolution": False,
                     "launcherVersion": "1.0",
                 }
-
-                # Auto-join solo con servidor real (placeholder = abrir sin servidor)
-                if SERVER_IP and SERVER_IP != "TU-SERVIDOR":
-                    options["server"] = SERVER_IP
-                    options["port"] = SERVER_PORT
-                else:
-                    self.logging.info("[Fase] Sin servidor configurado: se abrira sin auto-join.")
 
                 forge_json = os.path.join(MINECRAFT_DIRECTORY, "versions", forge_profile, f"{forge_profile}.json")
                 vanilla_json = os.path.join(MINECRAFT_DIRECTORY, "versions", MINECRAFT_VERSION, f"{MINECRAFT_VERSION}.json")

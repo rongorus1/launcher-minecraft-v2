@@ -128,8 +128,13 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
         if strip_prefix and rel.startswith(strip_prefix):
             rel = rel[len(strip_prefix):]
         rel = rel.lstrip("/")
+        # Export CurseForge: overrides/ se fusiona en la raíz (.minecraft)
+        if rel.startswith("overrides/"):
+            rel = rel[len("overrides/"):]
         if flat:
             rel = os.path.join("mods", os.path.basename(rel))
+        if not rel:
+            continue
         targets.append((info.filename, _safe_relative(rel)))
 
     top_folders = set()
@@ -147,6 +152,13 @@ def extract_modpack(archive_path: str, minecraft_dir: str,
             if strip_prefix and rel.startswith(strip_prefix):
                 rel = rel[len(strip_prefix):]
             rel = rel.lstrip("/")
+            if rel == "overrides":
+                continue
+            if rel.startswith("overrides/"):
+                rel = rel[len("overrides/"):]
+            rel = rel.lstrip("/")
+            if not rel:
+                continue
             safe = _safe_relative(rel)
             if not safe:
                 continue

@@ -1,21 +1,33 @@
 # src/controller/update_mods_controller.py
-"""Controlador para actualización e instalación de modpacks."""
+"""Controlador para actualización e instalación de modpacks.
+
+Sin archivos manuales: descarga el export CurseForge (manifest.json +
+overrides/) del último release publicado en GitHub y lo instala.
+"""
 import os
+import tempfile
 import threading
 from tkinter import messagebox
 
 from components.progress_bar_generic import ProgressBarGeneric
-from config import MINECRAFT_DIRECTORY
+from config import MINECRAFT_DIRECTORY, MODPACK_REPO, MODPACK_ASSET_PREFIX
 from helpers.archive_tools import extract_modpack
-from helpers.file_dialog_tools import select_file_archive
+from helpers.modpack_source import get_latest_modpack_asset, download_modpack
+
+# Temporal fijo (se borra tras extraer, con éxito o sin él)
+_MODPACK_TMP = os.path.join(tempfile.gettempdir(), "panas_modpack.zip")
+
+
+def _borrar_tmp():
+    try:
+        if os.path.isfile(_MODPACK_TMP):
+            os.remove(_MODPACK_TMP)
+    except OSError:
+        pass
 
 
 def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
-    """Inicia el proceso de actualización/instalación de modpack."""
-    archive_path = select_file_archive()
-    if not archive_path:
-        return
-
+    """Descarga el modpack de GitHub y lo instala en .minecraft."""
     def instalar():
         def reportar_progreso(ratio: float):
             if progress_bar is not None:
@@ -27,20 +39,46 @@ def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
                 progress_bar.show_element_thread_safe()
                 progress_bar.set_status_thread_safe(texto)
 
-        # 1. Extraer modpack base (archivos locales: mods, configs, etc.)
-        top_folders, error = extract_modpack(
-            archive_path, MINECRAFT_DIRECTORY,
-            progress_callback=reportar_progreso,
-            status_callback=reportar_estado
-        )
-
-        if error:
+        def _error(mensaje: str):
+            import logging
+            logging.getLogger().error(f"Actualizar mods: {mensaje}")
             master = progress_bar.master if progress_bar else None
             if master:
-                master.after(0, lambda: messagebox.showerror("Error", error))
+                master.after(0, lambda: messagebox.showerror("Actualizar mods", mensaje))
+
+        # 0. Localizar el paquete en el último release publicado
+        reportar_estado("Buscando modpack en GitHub...")
+        reportar_progreso(0.0)
+        tag, asset, error = get_latest_modpack_asset(MODPACK_REPO, MODPACK_ASSET_PREFIX)
+        if error or asset is None:
+            _error(error or "No se encontró el modpack en GitHub.")
             return
 
-        # 2. Si hay manifest.json, descargar dependencias externas (CurseForge)
+        # 1. Descargar a temporal (el juego no se toca hasta extraer con éxito)
+        try:
+            download_modpack(
+                asset, _MODPACK_TMP,
+                progress_callback=lambda r: reportar_progreso(r * 0.25),
+                status_callback=reportar_estado,
+            )
+        except Exception as e:
+            _borrar_tmp()
+            _error(str(e))
+            return
+
+        # 2. Extraer base (manifest.json + overrides/ fusionado en .minecraft)
+        top_folders, error = extract_modpack(
+            _MODPACK_TMP, MINECRAFT_DIRECTORY,
+            progress_callback=lambda r: reportar_progreso(0.25 + r * 0.25),
+            status_callback=reportar_estado
+        )
+        _borrar_tmp()
+
+        if error:
+            _error(error)
+            return
+
+        # 3. Si hay manifest.json, descargar dependencias externas (CurseForge)
         manifest_path = os.path.join(MINECRAFT_DIRECTORY, "manifest.json")
         if os.path.exists(manifest_path):
             def descargar_dependencias():
@@ -70,11 +108,37 @@ def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
                         # Avisar que el base se instaló aunque falten deps
                         master2 = progress_bar.master if progress_bar else None
                         if master2:
-                            master2.after(0, lambda: messagebox.showinfo(
+                            master.after(0, lambda: messagebox.showinfo(
                                 "Modpack base instalado",
                                 f"Se instalaron: {', '.join(top_folders) if top_folders else 'archivos'}\n"
                                 "Faltan dependencias externas (requiere API Key)."
                             ))
+                        return
+
+                    # Validar la key contra la API antes de descargar cientos
+                    # de mods: una key inválida daría un fallo por mod.
+                    # (Si GitHub funcionó hace segundos, un fallo aquí es la key.)
+                    reportar_estado("Verificando API key de CurseForge...")
+                    try:
+                        from helpers.curseforge_api import CurseForgeAPI
+                        key_ok = CurseForgeAPI(api_key).validate_key()
+                    except Exception as e:
+                        import logging
+                        logging.getLogger().warning(f"No se pudo validar la API key ({e}); se intenta descargar igual.")
+                        key_ok = True
+                    if not key_ok:
+                        master = progress_bar.master if progress_bar else None
+                        if master:
+                            master.after(0, lambda: messagebox.showwarning(
+                                "API Key inválida",
+                                "La API Key de CurseForge fue rechazada (inválida, revocada o sin conexión).\n"
+                                "Genera una nueva en console.curseforge.com y actualiza\n"
+                                "CURSEFORGE_API_KEY o curseforge_config.json.\n\n"
+                                "El modpack base ya se instaló, pero faltan dependencias externas."
+                            ))
+                        else:
+                            import logging
+                            logging.getLogger().warning("API Key inválida, no se descargaron dependencias externas")
                         return
 
                     downloader = CurseForgeDownloader(

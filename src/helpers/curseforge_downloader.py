@@ -125,12 +125,22 @@ class CurseForgeDownloader:
                     progress_callback(i + 1, len(dependencies))
                 continue
             
-            # Descargar
-            success = self._download_mod(
-                project_id=project_id,
-                file_id=file_id,
-                dest_path=dest_path,
-            )
+            # Descargar (un mod roto no aborta los demás)
+            try:
+                success = self._download_mod(
+                    project_id=project_id,
+                    file_id=file_id,
+                    dest_path=dest_path,
+                )
+            except Exception as e:
+                logger.error(f"Error inesperado con {project_id}/{file_id}: {e}")
+                # Limpiar parcial si quedó algo
+                try:
+                    if dest_path.exists():
+                        dest_path.unlink()
+                except OSError:
+                    pass
+                success = False
             
             if not success:
                 results["failed"].append({

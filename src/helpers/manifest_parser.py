@@ -66,7 +66,7 @@ class ManifestParser:
         
         return {
             "name": data.get("name", "Unknown Modpack"),
-            "version": data.get("versionId", "1.0.0"),
+            "version": data.get("version", data.get("versionId", "1.0.0")),
             "minecraft_version": minecraft_info.get("version", "1.20.1"),
             "forge_version": forge_version.replace("forge-", "") if forge_version else "47.4.10",
             "dependencies": [
@@ -98,11 +98,14 @@ class ManifestParser:
         except Exception as e:
             return False, f"Error leyendo archivo: {e}"
         
-        # Validar campos obligatorios
-        required_fields = ["name", "versionId", "minecraft", "files"]
+        # Validar campos obligatorios (versionId es opcional: el export
+        # CurseForge usa "version")
+        required_fields = ["name", "minecraft", "files"]
         for field in required_fields:
             if field not in data:
                 return False, f"Campo requerido faltante: {field}"
+        if "version" not in data and "versionId" not in data:
+            return False, "Falta 'version' (o 'versionId') del modpack"
         
         if "version" not in data.get("minecraft", {}):
             return False, "minecraft.version requerido"
