@@ -3,7 +3,6 @@ customtkinter
 pillow
 requests
 pyinstaller
-tk
 unrar2-cffi
 urllib3
 urllib3[secure]

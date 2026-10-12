@@ -168,7 +168,7 @@ class MinecraftController:
             try:
                 settings = load_settings()
                 if not validate_ram(settings['ram']['min'], settings['ram']['max']):
-                    self.root_window.after(0, lambda: messagebox.showerror("Error", "La RAM debe estar entre 4 y 16 GB"))
+                    self.root_window.after(0, lambda: messagebox.showerror("Error", "La RAM es inválida: usa un máximo de 4 a 16 GB y un mínimo menor que el máximo"))
                     return
 
                 # --- Java: si no esta instalado se descarga EN PARALELO con las
@@ -205,9 +205,14 @@ class MinecraftController:
                     "launcherName": LAUNCHER_NAME,
                     "customResolution": False,
                     "launcherVersion": "1.0",
-                    "server": SERVER_IP,
-                    "port": SERVER_PORT,
                 }
+
+                # Auto-join solo con servidor real (placeholder = abrir sin servidor)
+                if SERVER_IP and SERVER_IP != "TU-SERVIDOR":
+                    options["server"] = SERVER_IP
+                    options["port"] = SERVER_PORT
+                else:
+                    self.logging.info("[Fase] Sin servidor configurado: se abrira sin auto-join.")
 
                 forge_json = os.path.join(MINECRAFT_DIRECTORY, "versions", forge_profile, f"{forge_profile}.json")
                 vanilla_json = os.path.join(MINECRAFT_DIRECTORY, "versions", MINECRAFT_VERSION, f"{MINECRAFT_VERSION}.json")

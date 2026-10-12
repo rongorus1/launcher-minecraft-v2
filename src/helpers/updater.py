@@ -3,12 +3,25 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 
 import requests
 
 from services.logging_service import config_logging
 from helpers.system_tools import get_resource_path
+
+
+def _base_dir() -> str:
+    """Carpeta de instalación del launcher.
+
+    En exe compilado (onefile) __file__/get_resource_path apuntan a la
+    carpeta temporal _MEIPASS: se usa la carpeta del ejecutable.
+    En desarrollo se mantiene el comportamiento anterior.
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return get_resource_path("")
 
 
 def _es_version_superior(nueva: str, actual: str) -> bool:
@@ -88,7 +101,7 @@ def aplicar_actualizacion(zip_path: str) -> str:
     """Prepara el swap y devuelve la ruta del .bat que aplicara el cambio al cerrar."""
     config_logging()
     logger = logging.getLogger()
-    base = get_resource_path("")
+    base = _base_dir()
 
     update_dir = os.path.join(base, "_update")
     if os.path.isdir(update_dir):
@@ -144,6 +157,6 @@ def aplicar_actualizacion(zip_path: str) -> str:
 
 
 def lanzar_actualizacion(bat: str):
-    base = get_resource_path("")
+    base = _base_dir()
 
     subprocess.Popen(["cmd", "/c", bat], cwd=base, creationflags=subprocess.CREATE_NO_WINDOW)
