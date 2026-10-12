@@ -4,6 +4,9 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 19 · Vuelta a .rar manual (v1.0.7)
+"Actualizar Mods" vuelve a pedir el `.rar/.zip` manual (revert del flujo GitHub). Se conservan las correcciones compatibles: fusión de `overrides/`, `validate_manifest` tolerante, un mod roto no aborta, reintentos reales, key validada en vivo con aviso claro y logging del resultado. `VERSION` pasa a 1.0.7.
+
 ### 18 · Modpack desde GitHub, juego local (v1.0.6)
 Adiós servidor y `.rar` manual: el juego abre 100% local y "Actualizar Mods" descarga el export CurseForge (`Panas.RPG.*.zip`: `manifest.json` + `overrides/`) del último release publicado del repo del modpack, con progreso por fases y limpieza de temporales. El extractor fusiona `overrides/` en `.minecraft` (además corrige crash con entradas de directorio vacías). `validate_manifest` acepta `version`/`versionId`; un mod roto ya no aborta los demás; reintentos reales montados; la key se valida en vivo antes de descargar (aviso claro si es inválida). `VERSION` pasa a 1.0.6.
 
