@@ -4,6 +4,9 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 18 · Modpack desde GitHub, juego local (v1.0.6)
+Adiós servidor y `.rar` manual: el juego abre 100% local y "Actualizar Mods" descarga el export CurseForge (`Panas.RPG.*.zip`: `manifest.json` + `overrides/`) del último release publicado del repo del modpack, con progreso por fases y limpieza de temporales. El extractor fusiona `overrides/` en `.minecraft` (además corrige crash con entradas de directorio vacías). `validate_manifest` acepta `version`/`versionId`; un mod roto ya no aborta los demás; reintentos reales montados; la key se valida en vivo antes de descargar (aviso claro si es inválida). `VERSION` pasa a 1.0.6.
+
 ### 17 · Fix auto-update en exe + limpieza (v1.0.5)
 El auto-actualizador escribía en la carpeta temporal de PyInstaller en vez de la de instalación (el launcher se cerraba sin actualizarse): ahora usa la carpeta del exe en modo frozen. Key de CurseForge eliminada del código fuente (vive en `RongocraftLauncher/`, historial de git verificado limpio). `tk` fuera de `requirements.txt` (rompía instalaciones limpias). Sin `SERVER_IP` real configurado, el juego abre sin auto-join en vez de fallar. `validate_ram` sin UI en hilos y `button_update_mods` sin `pack()` redundante. `VERSION` pasa a 1.0.5.
 
