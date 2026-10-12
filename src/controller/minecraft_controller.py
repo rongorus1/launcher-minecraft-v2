@@ -53,7 +53,10 @@ class MinecraftController:
         """Ejecuta una operacion de UI en el hilo principal (seguro desde hilos)."""
         if self.root_window is not None:
             try:
-                self.root_window.after(0, lambda: func(*args))
+                # Ejecutamos la funcion y posteriormente forzamos update_idletasks
+                # para que el bucle de eventos procese pending events y repinte correctamente,
+                # evitando que la barra de progreso y el fondo se distorsionen durante descargas largas.
+                self.root_window.after(0, lambda: [func(*args), self.root_window.update_idletasks()])
             except Exception:
                 pass
 
