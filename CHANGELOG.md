@@ -4,6 +4,9 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 17 · Fix auto-update en exe + limpieza (v1.0.5)
+El auto-actualizador escribía en la carpeta temporal de PyInstaller en vez de la de instalación (el launcher se cerraba sin actualizarse): ahora usa la carpeta del exe en modo frozen. Key de CurseForge eliminada del código fuente (vive en `RongocraftLauncher/`, historial de git verificado limpio). `tk` fuera de `requirements.txt` (rompía instalaciones limpias). Sin `SERVER_IP` real configurado, el juego abre sin auto-join en vez de fallar. `validate_ram` sin UI en hilos y `button_update_mods` sin `pack()` redundante. `VERSION` pasa a 1.0.5.
+
 ### 16 · Integración CurseForge (v1.0.3 → v1.0.4)
 Descarga y actualización de mods desde CurseForge: `CurseForgeAPI`, `CurseForgeDownloader`, `ManifestParser` (+ `ModDependency`); `update_mods_controller` reescrito para resolver dependencias de `manifest.json`; dependencia `urllib3`. Configuración segura de la API key: solo local (variable `CURSEFORGE_API_KEY` o `curseforge_config.json`, ignorado por git) con plantilla `curseforge_config.json.example`; el launcher la busca en `RongocraftLauncher/`, junto al exe y (solo desarrollo) en el repo. La **v1.0.4** corrige la búsqueda de la key en el exe compilado (antes apuntaba a la carpeta temporal de PyInstaller) y `set_api_key` ahora guarda en el directorio persistente. `VERSION` pasa a 1.0.4; las releases publican `RongonLang.Launcher.exe` + `launcher_update_*.zip` para auto-actualización.
 
