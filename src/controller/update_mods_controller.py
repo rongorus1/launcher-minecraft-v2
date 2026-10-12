@@ -1,33 +1,21 @@
 # src/controller/update_mods_controller.py
-"""Controlador para actualización e instalación de modpacks.
-
-Sin archivos manuales: descarga el export CurseForge (manifest.json +
-overrides/) del último release publicado en GitHub y lo instala.
-"""
+"""Controlador para actualización e instalación de modpacks."""
 import os
-import tempfile
 import threading
 from tkinter import messagebox
 
 from components.progress_bar_generic import ProgressBarGeneric
-from config import MINECRAFT_DIRECTORY, MODPACK_REPO, MODPACK_ASSET_PREFIX
+from config import MINECRAFT_DIRECTORY
 from helpers.archive_tools import extract_modpack
-from helpers.modpack_source import get_latest_modpack_asset, download_modpack
-
-# Temporal fijo (se borra tras extraer, con éxito o sin él)
-_MODPACK_TMP = os.path.join(tempfile.gettempdir(), "panas_modpack.zip")
-
-
-def _borrar_tmp():
-    try:
-        if os.path.isfile(_MODPACK_TMP):
-            os.remove(_MODPACK_TMP)
-    except OSError:
-        pass
+from helpers.file_dialog_tools import select_file_archive
 
 
 def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
-    """Descarga el modpack de GitHub y lo instala en .minecraft."""
+    """Pide un .rar/.zip y lo instala en .minecraft (manifest + overrides)."""
+    archive_path = select_file_archive()
+    if not archive_path:
+        return
+
     def instalar():
         def reportar_progreso(ratio: float):
             if progress_bar is not None:
@@ -46,39 +34,18 @@ def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
             if master:
                 master.after(0, lambda: messagebox.showerror("Actualizar mods", mensaje))
 
-        # 0. Localizar el paquete en el último release publicado
-        reportar_estado("Buscando modpack en GitHub...")
-        reportar_progreso(0.0)
-        tag, asset, error = get_latest_modpack_asset(MODPACK_REPO, MODPACK_ASSET_PREFIX)
-        if error or asset is None:
-            _error(error or "No se encontró el modpack en GitHub.")
-            return
-
-        # 1. Descargar a temporal (el juego no se toca hasta extraer con éxito)
-        try:
-            download_modpack(
-                asset, _MODPACK_TMP,
-                progress_callback=lambda r: reportar_progreso(r * 0.25),
-                status_callback=reportar_estado,
-            )
-        except Exception as e:
-            _borrar_tmp()
-            _error(str(e))
-            return
-
-        # 2. Extraer base (manifest.json + overrides/ fusionado en .minecraft)
+        # 1. Extraer modpack base (manifest.json + overrides/ fusionado en .minecraft)
         top_folders, error = extract_modpack(
-            _MODPACK_TMP, MINECRAFT_DIRECTORY,
-            progress_callback=lambda r: reportar_progreso(0.25 + r * 0.25),
+            archive_path, MINECRAFT_DIRECTORY,
+            progress_callback=reportar_progreso,
             status_callback=reportar_estado
         )
-        _borrar_tmp()
 
         if error:
             _error(error)
             return
 
-        # 3. Si hay manifest.json, descargar dependencias externas (CurseForge)
+        # 2. Si hay manifest.json, descargar dependencias externas (CurseForge)
         manifest_path = os.path.join(MINECRAFT_DIRECTORY, "manifest.json")
         if os.path.exists(manifest_path):
             def descargar_dependencias():
