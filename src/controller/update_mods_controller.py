@@ -167,6 +167,18 @@ def run_update_mods_controller(progress_bar: 'ProgressBarGeneric' = None):
                     if not master:
                         return
                     
+                    import logging
+                    logging.getLogger().warning(
+                        "Deps CurseForge: success=%s installed=%s skipped=%s failed=%s error=%s",
+                        result.get("success"), result.get("installed", 0),
+                        result.get("skipped", 0), len(result.get("failed", [])),
+                        result.get("error", ""),
+                    )
+                    for f in result.get("failed", [])[:3]:
+                        logging.getLogger().warning(
+                            "Dep fallida: %s/%s: %s",
+                            f.get("project_id"), f.get("file_id"), f.get("error"))
+
                     if not result.get("success"):
                         err = result.get("error", "Error desconocido")
                         master.after(0, lambda: messagebox.showerror("Error dependencias", err))
