@@ -16,3 +16,10 @@ _update/
 # IDE
 .idea/
 .vscode/
+
+# Secrets locales CurseForge (no subir la key real, solo el .example)
+curseforge_config.json
+src/curseforge_config.json
+**/curseforge_config.json
+!curseforge_config.json.example
+!**/curseforge_config.json.example
