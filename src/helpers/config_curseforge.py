@@ -8,13 +8,28 @@ from pathlib import Path
 # NOTA: estos archivos están en .gitignore, nunca se suben a GitHub.
 # Se distribuye solo curseforge_config.json.example como plantilla.
 def _candidate_config_paths():
-    here = Path(__file__).resolve()
-    root = here.parent.parent.parent  # raíz del repo
-    src_dir = here.parent.parent      # src/
-    return [
-        root / "curseforge_config.json",
-        src_dir / "curseforge_config.json",  # compat: tu key actual vive aquí
-    ]
+    import sys
+    paths = []
+    # 1. Directorio persistente del launcher (funciona en .exe y desde fuente).
+    #    Import lazy para evitar ciclos (config -> helpers -> config).
+    try:
+        from config import LAUNCHER_DIR
+        if LAUNCHER_DIR:
+            paths.append(Path(LAUNCHER_DIR) / "curseforge_config.json")
+    except Exception:
+        pass
+    # 2. Junto al ejecutable (solo modo frozen: __file__ apunta a _MEIPASS temporal).
+    if getattr(sys, "frozen", False):
+        try:
+            paths.append(Path(sys.executable).resolve().parent / "curseforge_config.json")
+        except Exception:
+            pass
+    else:
+        # 3. Raíz del repo y src/ (solo desarrollo desde fuente).
+        here = Path(__file__).resolve()
+        paths.append(here.parent.parent.parent / "curseforge_config.json")
+        paths.append(here.parent.parent / "curseforge_config.json")
+    return paths
 
 # Configuración de CurseForge API (carga inicial, solo local)
 CURSEFORGE_API_KEY = os.getenv("CURSEFORGE_API_KEY", "")
@@ -58,9 +73,13 @@ def validate_api_key() -> bool:
     return bool(get_api_key())
 
 def set_api_key(api_key: str) -> None:
-    """Guarda la API key en archivo de configuración local."""
+    """Guarda la API key en archivo de configuración local persistente."""
     import json
-    config_path = Path(__file__).parent.parent.parent / "curseforge_config.json"
+    candidates = _candidate_config_paths()
+    if not candidates:
+        raise RuntimeError("No se pudo determinar ruta para guardar la API key")
+    config_path = candidates[0]
+    config_path.parent.mkdir(parents=True, exist_ok=True)
     config = {"api_key": api_key}
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
