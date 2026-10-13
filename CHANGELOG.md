@@ -4,6 +4,9 @@ Cada cambio tiene su propia rama (`cambio/<n>-<nombre>`) con un registro detalla
 
 ## Correcciones posteriores a v1.0.0
 
+### 20 · Log de dependencias (v1.0.8)
+Se registra en `launcher.log` el resultado de la resolución CurseForge (éxito, instaladas, omitidas, fallidas con detalle) para diagnosticar errores como "Error dependencias". Sin cambios de comportamiento. `VERSION` pasa a 1.0.8.
+
 ### 19 · Vuelta a .rar manual (v1.0.7)
 "Actualizar Mods" vuelve a pedir el `.rar/.zip` manual (revert del flujo GitHub). Se conservan las correcciones compatibles: fusión de `overrides/`, `validate_manifest` tolerante, un mod roto no aborta, reintentos reales, key validada en vivo con aviso claro y logging del resultado. `VERSION` pasa a 1.0.7.
 
